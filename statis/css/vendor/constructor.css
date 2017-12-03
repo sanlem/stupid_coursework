@@ -1,0 +1,10 @@
+#canvas {
+    background-color: #6c757d;
+    position: relative;
+    height: 600px;
+}
+
+.node {
+    border-radius: 50%;
+    background-color: greenyellow;
+}

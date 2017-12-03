@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}List{% endblock %}
+
+{% block content %}
+    {% if object_list %}
+        {% for project in object_list %}
+            <div class="row">
+                {{ project.name | truncatechars:10 }}
+                <hr>
+                <a class="btn btn-default" href="{% url "graph-build" project.id %}">Edit</a>
+                <a class="btn btn-danger" href="#">Delete</a>
+            </div>
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p class="text">No graphs yet.</p>
+    {% endif %}
+    <hr>
+    <div class="row">
+        <a class="btn btn-success" href="{% url "graph-create" %}">Add</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Build graph{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static "css/vendor/constructor.css" %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row" id="canvas"></div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static "js/vendor/sweetalert2.js" %}"></script>
+    <script src="{% static "js/vendor/jsplumb.min.js" %}"></script>
+{% endblock %}
