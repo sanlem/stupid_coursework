@@ -17,6 +17,8 @@ class Node(models.Model):
     weight = models.PositiveSmallIntegerField(null=False, blank=False)
     is_start = models.BooleanField(default=False, null=False, blank=True)
     graph = models.ForeignKey(Graph, related_name="nodes", null=False, blank=False)
+    left = models.PositiveSmallIntegerField(null=False, blank=False)
+    top = models.PositiveSmallIntegerField(null=False, blank=False)
 
 
 class Edge(models.Model):

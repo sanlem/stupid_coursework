@@ -13,17 +13,18 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
+from django.conf.urls import url, include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 from graph import views as graphs_views
+from graph.urls import router as graph_router
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', graphs_views.GraphsListView.as_view(), name="graph-list"),
     url(r'new_graph/', graphs_views.GraphCreateView.as_view(), name="graph-create"),
-    url(r'build/(?P<pk>[0-9])/$', graphs_views.GraphBuildView.as_view(), name="graph-build")
-]
-
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    url(r'build/(?P<pk>[0-9])/$', graphs_views.GraphBuildView.as_view(), name="graph-build"),
+    url(r'api/', include(graph_router.urls, namespace="api")),
+    url(r'api/graphs/(?P<pk>[0-9])/$', graphs_views.GraphDetailAPIView.as_view(), name="graph-detail")
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

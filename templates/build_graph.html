@@ -8,10 +8,22 @@
 {% endblock %}
 
 {% block content %}
-    <div class="row" id="canvas"></div>
+    <div class="row" id="canvas">
+{#        {% for node in object.nodes.all %}#}
+{#            <div class="node" style="left: {{ node.left }}px; top: {{ node.top }}px" id="{{ node.id }}">#}
+{#                <p class="text node-weight">{{ node.weight }}</p>#}
+{#                <div class="ep" id="_{{ node.id }}"></div>#}
+{#            </div>#}
+{#        {% endfor %}#}
+    </div>
 {% endblock %}
 
 {% block extra_js %}
+{#    <script src="{% static "js/vendor/sweetalert2.js" %}"></script>#}
+    <script>
+        var graphId = {{ object.id }}
+    </script>
     <script src="{% static "js/vendor/sweetalert2.js" %}"></script>
     <script src="{% static "js/vendor/jsplumb.min.js" %}"></script>
+    <script src="{% static "js/constructor.js" %}"></script>
 {% endblock %}
