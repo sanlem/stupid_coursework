@@ -5,7 +5,7 @@ from .models import Node, Edge, Graph
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ["id", "weight", "left", "top", "index", "edges"]
+        fields = ["id", "weight", "left", "top", "index", "edges", "graph"]
 
     edges = serializers.SerializerMethodField()
 

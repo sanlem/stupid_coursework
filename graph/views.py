@@ -27,6 +27,7 @@ class NodeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         data = serializer.validated_data
+        print(data)
 
         if data.get("index", None) is None:
             graph = data["graph"]

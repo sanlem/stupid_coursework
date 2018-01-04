@@ -13,7 +13,7 @@ $(document).ready(function () {
                     length: 14,
                     foldback: 0.8
                 } ],
-                [ "Label", { label: "FOO", id: "label", cssClass: "aLabel" }]
+                [ "Label", { label: "Weight", id: "label", cssClass: "aLabel" }]
             ],
             Container: "canvas"
         });
@@ -66,7 +66,8 @@ $(document).ready(function () {
                             })
                         }
                     }).then(function (result) {
-                        jQuery.post("/api/edges/", {from_node: info.sourceId, to_node: info.targetId, weight: result.value})
+                        let data = {from_node: info.sourceId, to_node: info.targetId, weight: result.value};
+                        jQuery.post("/api/edges/", data, "json")
                             .then(function (edge) {
                                 connectNodes(edge);
                             });
@@ -106,7 +107,30 @@ $(document).ready(function () {
             var initNode = function(el) {
                 console.log("Gonna init node");
                 // initialise draggable elements.
-                instance.draggable(el);
+                // instance.draggable(el);
+
+                instance.draggable(el, {
+                    stop: function(e, ui) {
+                        var offset = el.offset();
+                        var parentOffset = $('#canvas').offset();
+                        $.ajax({
+                            url: '/api/nodes/' + el.attr("id") + "/",
+                            type: 'PATCH',
+                            data: {
+                                'left': offset.left - parentOffset.left,
+                                'top': offset.top - parentOffset.top
+                            },
+                            error: function() {
+                                swal({
+                                    title: 'Unexpected error',
+                                    text: 'Sorry, something went wrong. Please, ty again later.',
+                                    type: 'error',
+                                    confirmButtonClass: 'btn-danger'
+                                });
+                            }
+                        });
+                    }
+                });
 
                 instance.makeSource(el, {
                     filter: ".ep",
@@ -128,10 +152,54 @@ $(document).ready(function () {
                     allowLoopback: true
                 });
 
+                el.on("dblclick", function(e) {
+                    e.stopPropagation();
+
+                    swal({
+                        title: 'Node deletion',
+                        text: "Are you sure to delete this node?",
+                        type: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Delete',
+                        cancelButtonText: 'No, cancel!',
+                        confirmButtonClass: 'btn btn-success',
+                        cancelButtonClass: 'btn btn-danger',
+                        buttonsStyling: false
+                    }).then(
+                        function () {
+                            // unpublish the bot
+                            $.ajax({
+                                url: "/api/nodes/" + el.attr("id") + "/",
+                                type: 'DELETE'
+                            }).done(function(data, textStatus, xhr) {
+                                if (xhr.status === 204) {
+                                    let nodeId = el.attr("id");
+                                    el.remove();
+
+                                    let conns = instance.getConnections({'source': "t" + nodeId});
+
+                                    for (let i = 0; i < conns.length; i++) {
+                                        instance.deleteConnection(conns[i]);
+                                    }
+                                } else {
+                                    swal("Failed to delete! " + xhr.status);
+                                }
+
+                            })
+                        }, function (dismiss) {
+                            // dismiss can be 'cancel', 'overlay',
+                            // 'close', and 'timer'
+                            // redirect from here
+                            console.log('Dissmised node deletion.');
+                        });
+                });
+
                 // this is not part of the core demo functionality; it is a means for the Toolkit edition's wrapped
                 // version of this demo to find out about new nodes being added.
                 //
-                instance.fire("jsPlumbDemoNodeAdded", el);
+                // instance.fire("jsPlumbDemoNodeAdded", el);
             };
 
             let newNode = function(result) {
@@ -148,14 +216,26 @@ $(document).ready(function () {
             };
 
             function connectNodes(edge) {
+                let $source = $("#t" + edge.from_node);
+                let $target = $("#" + edge.to_node);
+                console.log($source, $target);
                 let connector = instance.connect({
-                    source: edge.from_node,
-                    target: "t" + edge.to_node,
-                    type:"basic"
+                    source: $source,
+                    target: $target,
+                    type:"basic",
+                    // overlays:[
+                    //     [ "Label", {label: edge.weight, id:"label"}]
+                    // ]
                 });
 
-                connector.getOverlay("label").setLabel(edge.weight);
-            };
+                let label = connector.getOverlay("label");
+                console.log("Lable:", label);
+                label.setLabel(edge.weight.toString());
+                // // label.canvas.textContent = edge.weight;
+                // label.label = edge.weight;
+                // label.labelText = edge.weight;
+                // console.log(connector);
+            }
 
             // suspend drawing and initialise.
             instance.batch(function () {
@@ -165,7 +245,7 @@ $(document).ready(function () {
 
                 for (let i = 0; i < nodes.length; i++) {
                     let edges = nodes[i].edges;
-                    for (let j = 0; j < edges; j++) {
+                    for (let j = 0; j < edges.length; j++) {
                         let edge = edges[j];
                         connectNodes(edge);
                     }
