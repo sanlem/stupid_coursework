@@ -29,10 +29,12 @@ class Processor:
         self.isSending = False
         self.sendingFrom = -1
         self.sendingTo = -1
-        self.isReceiving = False
+        self.waitingFrom = -1
+        self.waitingFor = -1
         self.receiveEndTime = 0
         self.currentTask = None
         self.hasPacketToSend = False
+        self.packetSent = False
 
         self.taskEndTime = 0
         # здесь хранятся пакеты. формат - КОМУ\ОТ\ПРОЧИТАН
@@ -68,14 +70,14 @@ class Processor:
         global procEnded, dataOnBus
         if self.over: return
 
-        if self.isReceiving:
-            if self.receiveEndTime == tick:
-                # закочнили ждать
-                self.isReceiving = False
-                self.receiveEndTime = 0
-            else:
-                # продолжаем ждать
-                return
+        # if self.isReceiving:
+        #     if self.receiveEndTime == tick:
+        #         закочнили ждать
+                # self.isReceiving = False
+                # self.receiveEndTime = 0
+            # else:
+            #     продолжаем ждать
+                # return
 
         # self.hasMarker = True if (tick+1) % p == no else False
 
@@ -110,7 +112,10 @@ class Processor:
                 # print('     Пересылка задания {0} закончилась'.format(self.IOC[0][1]))
                 self.isSending = False
                 # marker.isOccupied = А
-                dataOnBus = self.IOC.pop(0)
+
+                if not self.packetSent:
+                    self.IOC.pop(0)
+                    self.packetSent = True
                 if not self.IOC:
                     self.hasPacketToSend = 0
                     # прекращаем передачу, передаем пакет на шину, удаляем задачу из очереди, освобождаем маркер
@@ -119,6 +124,7 @@ class Processor:
                 self.sendingTo = -1
             elif self.sendEndTime == tick + 1:
                 marker.canFree = True
+                dataOnBus = self.IOC[0]
                 return
             else:
                 return
@@ -133,6 +139,10 @@ class Processor:
                 marker.isOccupied = True
                 if self.sendEndTime == tick + 1:
                     marker.canFree = True
+                    dataOnBus = self.IOC.pop(0)
+                    self.packetSent = True
+                else:
+                    self.packetSent = False
                 # передача данных
                 return
                 #print('     П-{0} закончил работу и ушел домой к жене'.format(self.no))
@@ -154,6 +164,12 @@ class Processor:
                     self.localMemory.pop(0)
                 if all(self.taskQueue[0].parentsMap):
                     self.execute(self.taskQueue.pop(0))
+                    self.waitingFor = -1
+                    self.waitingFrom = -1
+                else:
+                    next_task = self.taskQueue[0]
+                    self.waitingFor = next_task.no
+                    self.waitingFrom = ",".join([str(next_task.parentsNo[index]+1) for index, i in enumerate(next_task.parentsMap) if i == 0])
             elif not (self.isSending or self.hasPacketToSend):
                 self.over = 1
                 procEnded -= 1
@@ -741,7 +757,10 @@ def строка_состояния(str):
         if i[1]:
             tmp += '{:<2}|'.format(i[1].no + 1)
         else:
-            tmp += '--|'
+            if i[5] > 0:
+                tmp += '{}<-{}|'.format(i[5] + 1, i[6])
+            else:
+                tmp += '--|'
         if i[2]:
             tmp += '{}->{}'.format(i[3] + 1, i[4] + 1)
         else:
@@ -819,7 +838,8 @@ def perform_simulation():
             send(dataOnBus)
         for index, i in enumerate(procs):
             i.handle()
-            слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending, i.sendingFrom, i.sendingTo]
+            слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending,
+                                      i.sendingFrom, i.sendingTo, i.waitingFor, i.waitingFrom]
         строка_состояния(слово_состояния)
         tick += 1
         if tick == 5:
