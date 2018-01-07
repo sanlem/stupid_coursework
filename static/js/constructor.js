@@ -205,7 +205,9 @@ $(document).ready(function () {
             let newNode = function(result) {
                 let $n = $(
                     '<div class="node" style="left: ' + result.left + 'px; top: ' + result.top +'px" id="' + result.id +'">' +
-                    '<p class="text node-weight">' + result.weight +'</p>' +
+                    '<p class="text node-index">' + result.index +'</p>' +
+                    '<hr class="split">' +
+                    '<p class="text node-weight">' + result.weight +'[p]</p>' +
                     '<div class="ep" id="' + 't' + result.id +'"></div>' +
                     '</div>'
                 );

@@ -2,7 +2,7 @@
     background-color: #9fcdff;
     position: relative;
     width: 100%;
-    height: 600px;
+    height: 800px;
 }
 
 .node {
@@ -12,15 +12,24 @@
     width: 70px;
     height: 70px;
 }
-
+hr.split {
+    border-bottom: 3px black solid;
+    margin-top: -15px;
+}
 .node-weight {
-    margin: 45%;
-    margin-top: 30%;
+    margin-left: 20px;
+    margin-top: -15px;
+    /*margin-bottom: -3px;*/
+}
+
+.node-index {
+    margin-left: 30px;
+    margin-top: 5px;
 }
 
 .ep {
     margin-left: 30px;
-    margin-top: -30px;
+    margin-top: -15px;
     width: 10px;
     height: 10px;
     border-radius: 50%;
