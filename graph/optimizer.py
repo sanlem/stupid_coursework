@@ -18,8 +18,6 @@ dataOnBus = None
 
 class Processor:
     def __init__(self, no, performance):
-        # процессор сосед, которому передается маркер
-        self.fellowProc = None
         # True если процессор хочет переслать данные и False если задача выполняется
         self.procActive = False
         self.sendEndTime = 0
@@ -29,6 +27,10 @@ class Processor:
         self.taskQueue = []
         self.hasMarker = False
         self.isSending = False
+        self.sendingFrom = -1
+        self.sendingTo = -1
+        self.isReceiving = False
+        self.receiveEndTime = 0
         self.currentTask = None
         self.hasPacketToSend = False
 
@@ -45,7 +47,8 @@ class Processor:
 
         self.no = no
         from random import randrange
-        self.performance = randrange(1, 3)
+        # self.performance = randrange(1, 3)
+        self.performance = 1
 
         print("Processor {} performance {}".format(self.no, self.performance))
         self.taskQueue.clear()
@@ -65,10 +68,16 @@ class Processor:
         global procEnded, dataOnBus
         if self.over: return
 
+        if self.isReceiving:
+            if self.receiveEndTime == tick:
+                # закочнили ждать
+                self.isReceiving = False
+                self.receiveEndTime = 0
+            else:
+                # продолжаем ждать
+                return
 
         # self.hasMarker = True if (tick+1) % p == no else False
-
-
 
         #if self.currentTask:
         # если какая-то задача была выполнена
@@ -85,11 +94,51 @@ class Processor:
                     # или готовим к пересылке
                     self.IOC.append(packet)
                     self.hasPacketToSend = 1
-                    marker.ask_marker(self.no)
+                    if marker.isOccupied is True:
+                        marker.ask_marker(self.no)
+                    else:
+                        marker.onProc = self.no
+                    # return
             self.currentTask = None
             self.procActive = False
+            # return
         else:
             pass
+
+        if self.isSending:
+            if self.sendEndTime == tick:
+                # print('     Пересылка задания {0} закончилась'.format(self.IOC[0][1]))
+                self.isSending = False
+                # marker.isOccupied = А
+                dataOnBus = self.IOC.pop(0)
+                if not self.IOC:
+                    self.hasPacketToSend = 0
+                    # прекращаем передачу, передаем пакет на шину, удаляем задачу из очереди, освобождаем маркер
+                    # print('     Пересылка данных с П-{0}'.format(self.no))
+                self.sendingFrom = -1
+                self.sendingTo = -1
+            elif self.sendEndTime == tick + 1:
+                marker.canFree = True
+                return
+            else:
+                return
+
+        elif self.hasPacketToSend:
+            if marker.onProc == self.no:
+                self.sendEndTime = tick + self.IOC[0][2] * int(self.performance)
+                self.sendingFrom = self.IOC[0][1]
+                self.sendingTo = self.IOC[0][0]
+                # print('     Начинается пересылка с П-{0} - окончание на {1} такте'.format(self.no, self.sendEndTime))
+                self.isSending = True
+                marker.isOccupied = True
+                if self.sendEndTime == tick + 1:
+                    marker.canFree = True
+                # передача данных
+                return
+                #print('     П-{0} закончил работу и ушел домой к жене'.format(self.no))
+            else:
+                # маркера нету, ждем
+                return
 
         #else:
         # если очередь не пуста
@@ -108,27 +157,6 @@ class Processor:
             elif not (self.isSending or self.hasPacketToSend):
                 self.over = 1
                 procEnded -= 1
-
-        if self.isSending:
-            if self.sendEndTime == tick:
-                # print('     Пересылка задания {0} закончилась'.format(self.IOC[0][1]))
-                self.isSending = False
-                # marker.isOccupied = А
-                marker.canFree = True
-                dataOnBus = self.IOC.pop(0)
-                if not self.IOC:
-                    self.hasPacketToSend = 0
-                    # прекращаем передачу, передаем пакет на шину, удаляем задачу из очереди, освобождаем маркер
-                    # print('     Пересылка данных с П-{0}'.format(self.no))
-
-        elif self.hasPacketToSend and marker.onProc == self.no:
-            self.sendEndTime = tick + self.IOC[0][2] * int(self.performance)
-            # print('     Начинается пересылка с П-{0} - окончание на {1} такте'.format(self.no, self.sendEndTime))
-            self.isSending = True
-            marker.isOccupied = True
-            # передача данных
-
-            #print('     П-{0} закончил работу и ушел домой к жене'.format(self.no))
 
     def onProc(self, j):
         for i in self.taskQueue:
@@ -715,7 +743,7 @@ def строка_состояния(str):
         else:
             tmp += '--|'
         if i[2]:
-            tmp += 'S'
+            tmp += '{}->{}'.format(i[3] + 1, i[4] + 1)
         else:
             tmp += '-'
         tmp1 = ' {:<15}p '.format(tmp)
@@ -740,56 +768,67 @@ matrix =    [[0,   1000,  5,   0,   0],
 N = len(matrix)
 vertexWeight = [100, 100, 100, 100, 100]'''
 
-buildGraf()
-
-#levelDistribution()
-CPcopy = findCriticalPath()
-print(CPcopy)
-# print(successorMaxPath(graf[0]))
-criticalPath = findCriticalPath()
-# print(criticalPath)
-# print('max = ', maxLevel)
-condition = True
 marker = Marker()
 
 
-graf1 = deepcopy(graf)
+def perform_simulation():
+    global tick, procEnded, dataOnBus, CPcopy
+    buildGraf()
 
-'''for i in ClusterPool.clusters:
-   if i: print(i)'''
+    #levelDistribution()
+    CPcopy = findCriticalPath()
+    print(CPcopy)
+    # print(successorMaxPath(graf[0]))
+    criticalPath = findCriticalPath()
+    # print(criticalPath)
+    # print('max = ', maxLevel)
+    condition = True
 
-#print(findCriticalPath())
-optimizeGraf()
+    graf1 = deepcopy(graf)
 
-initialLoading()
+    '''for i in ClusterPool.clusters:
+       if i: print(i)'''
 
-ClusterPool.printClusters()
-procEnded = len(procs)
-слово_состояния = [0 for i in procs]
+    #print(findCriticalPath())
+    optimizeGraf()
 
-while procEnded:
+    initialLoading()
 
-    if marker.canFree is True:
-        marker.isOccupied = False
-        marker.canFree = False
+    ClusterPool.printClusters()
+    procEnded = len(procs)
+    слово_состояния = [0 for i in procs]
 
-    if marker.isOccupied is False:
-        # marker.onProc = procs[marker.onProc - 1].no
-        # check queue
-        if len(marker.queue) > 0:
-            next_proc = marker.queue.popleft()
-            marker.onProc = next_proc
+    while procEnded:
 
-    #print('Такт - {0}. Маркер у П{1}'.format(tick, marker.onProc))
-    if dataOnBus:
-        send(dataOnBus)
-    for index, i in enumerate(procs):
-        i.handle()
-        слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending]
-    строка_состояния(слово_состояния)
-    tick += 1
-    if tick == 5:
-        pass
-    if tick == 100:
-        pass
-print(findCriticalPath())
+        if marker.canFree is True:
+            marker.isOccupied = False
+            marker.canFree = False
+
+        if marker.isOccupied is False:
+            # marker.onProc = procs[marker.onProc - 1].no
+            # check queue
+            if len(marker.queue) > 0:
+                next_proc = marker.queue.popleft()
+                marker.onProc = next_proc
+                # marker.isOccupied = True
+            else:
+                marker.onProc = -1
+
+        # print('Такт - {0}. Маркер у П{1}'.format(tick, marker.onProc))
+        if dataOnBus:
+            send(dataOnBus)
+        for index, i in enumerate(procs):
+            i.handle()
+            слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending, i.sendingFrom, i.sendingTo]
+        строка_состояния(слово_состояния)
+        tick += 1
+        if tick == 5:
+            pass
+        if tick == 59:
+            # break
+            pass
+    print(findCriticalPath())
+
+
+if __name__ == "__main__":
+    perform_simulation()
