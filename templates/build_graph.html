@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+    <a class="btn btn-success" href="{% url "graph-simulate" object.id %}">Simulate</a>
     <div class="row" id="canvas">
 {#        {% for node in object.nodes.all %}#}
 {#            <div class="node" style="left: {{ node.left }}px; top: {{ node.top }}px" id="{{ node.id }}">#}
@@ -21,7 +22,7 @@
 {% block extra_js %}
 {#    <script src="{% static "js/vendor/sweetalert2.js" %}"></script>#}
     <script>
-        var graphId = {{ object.id }}
+        var graphId = {{ object.id }};
     </script>
     <script src="{% static "js/vendor/sweetalert2.js" %}"></script>
     <script src="{% static "js/vendor/jsplumb.js" %}"></script>

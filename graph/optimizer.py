@@ -574,6 +574,44 @@ def buildGraf():
     for i in graf:
         ClusterPool.clusters[0].append(i)
 
+
+def buildConstructedGraph(g):
+    global graf, matrix
+    nodes = g.nodes.all()
+    print("{} nodes".format(len(nodes)))
+    for node in nodes:
+        no = node.index - 1
+        wv = node.weight
+        u = []
+        wu = []
+        for e in node.out_edges.all():
+            u.append(e.to_node.index - 1)
+            wu.append(e.weight)
+            print("no: {}; u: {}; wu: {}".format(no, u, wu))
+        graf.append(V(no, wv, u, wu))
+
+    # print(graf)
+    # import time
+    # time.sleep(60)
+
+    matrix = [[0 for i in range(len(graf))] for j in range(len(graf))]
+    # устанавливаем родителей
+    for i in graf:
+        for j in graf:
+            if i.no in j.u:
+                i.parent.append(j.no)
+
+    for index, i in enumerate(graf):
+        for index1, j in enumerate(i.u):
+            #print('i={0} j={1}'.format(i,j))
+            if i.no == 14:
+                pass
+            matrix[i.no][j] = i.wu[index1]
+    ClusterPool.clusters[0] = []
+    for i in graf:
+        ClusterPool.clusters[0].append(i)
+
+
 def setMax(maxL):
     global maxLevel
     maxLevel = maxL if maxL > maxLevel else maxLevel
@@ -790,9 +828,23 @@ vertexWeight = [100, 100, 100, 100, 100]'''
 marker = Marker()
 
 
-def perform_simulation():
+def perform_simulation(g=None):
     global tick, procEnded, dataOnBus, CPcopy
-    buildGraf()
+    from django.conf import settings
+
+    import os
+    # os.environ["DJANGO_SETTINGS_MODULE"] = "planner.settings.py"
+    # settings.configure()
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "planner.settings")
+    import django
+    django.setup()
+    from graph.models import Graph
+    g = Graph.objects.get(pk=6)
+
+    if g is None:
+        buildGraf()
+    else:
+        buildConstructedGraph(g)
 
     #levelDistribution()
     CPcopy = findCriticalPath()
@@ -816,6 +868,7 @@ def perform_simulation():
     ClusterPool.printClusters()
     procEnded = len(procs)
     слово_состояния = [0 for i in procs]
+    result = []
 
     while procEnded:
 

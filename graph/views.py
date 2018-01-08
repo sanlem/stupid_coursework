@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from .models import Graph, Node, Edge
 from .serializers import NodeSerializer, EdgeSerializer, GraphSerializer
+from .optimizer import perform_simulation
 
 
 class GraphsListView(ListView):
@@ -49,3 +50,8 @@ class EdgeViewSet(ModelViewSet):
 class GraphDetailAPIView(RetrieveAPIView):
     serializer_class = GraphSerializer
     queryset = Graph.objects.all()
+
+
+def simulate(request, pk):
+    graph = Graph.objects.get(pk=pk)
+    perform_simulation(graph)

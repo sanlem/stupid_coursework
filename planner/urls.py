@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^$', graphs_views.GraphsListView.as_view(), name="graph-list"),
     url(r'new_graph/', graphs_views.GraphCreateView.as_view(), name="graph-create"),
     url(r'build/(?P<pk>[0-9])/$', graphs_views.GraphBuildView.as_view(), name="graph-build"),
+    url(r'simulate/(?P<pk>[0-9])/$', graphs_views.simulate, name="graph-simulate"),
     url(r'api/', include(graph_router.urls, namespace="api")),
     url(r'api/graphs/(?P<pk>[0-9])/$', graphs_views.GraphDetailAPIView.as_view(), name="graph-detail")
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

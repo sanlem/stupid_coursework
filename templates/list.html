@@ -9,6 +9,7 @@
                 {{ project.name | truncatechars:10 }}
                 <hr>
                 <a class="btn btn-default" href="{% url "graph-build" project.id %}">Edit</a>
+                <a class="btn btn-success" href="{% url "graph-simulate" project.id %}">Simulate</a>
                 <a class="btn btn-danger" href="#">Delete</a>
             </div>
             <hr>
