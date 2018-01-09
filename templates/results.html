@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Results{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% for name, data in clusters.items %}
+            <p class="text">{{ name }}: {% for i in data %}{{ i }}{% endfor %}</p>
+        {% endfor %}
+
+        <table class="table table-striped table-bordered">
+            {% for row in rows %}
+                <tr>
+                    <td>
+                        {{ forloop.counter }}
+                    </td>
+                    {% for col in row %}
+                        <td>
+                            {{ col }}
+                        </td>
+                    {% endfor %}
+
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

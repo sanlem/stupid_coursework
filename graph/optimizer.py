@@ -1,6 +1,6 @@
 # Граф
 from copy import deepcopy
-from collections import deque
+from collections import deque, OrderedDict
 
 graf = []
 tick = 1
@@ -260,6 +260,18 @@ class ClusterPool():
                     print('[{0}]'.format(j.no+1), end=' ')
                 print('. ', end='')
         print('')
+
+    @classmethod
+    def getClusters(cls):
+        clusters = OrderedDict()
+        for index, i in enumerate(cls.clusters):
+            if not index:
+                clusters["Unclastered"] = ['[{0}]'.format(j.no+1) for j in i]
+            else:
+                clusters["Cluster {}".format(index)] = ['[{0}]'.format(j.no+1) for j in i]
+
+        return clusters
+
     @classmethod
     def zeroing(self, vertex, cluster):
         for i in cluster:
@@ -788,24 +800,36 @@ def строка_состояния(str):
     s = '{:<4}p'.format(tick)
     for  i in str:
         tmp = ''
-        if i[0]:
-            tmp += 'M|'
-        else:
-            tmp += '-|'
+        # if i[0]:
+        #     tmp += 'M|'
+        # else:
+        #     tmp += '-|'
         if i[1]:
-            tmp += '{:<2}|'.format(i[1].no + 1)
+            tmp += '{:<2}'.format(i[1].no + 1)
         else:
             if i[5] > 0:
-                tmp += '{}<-{}|'.format(i[5] + 1, i[6])
+                tmp += '{}<-{}'.format(i[5] + 1, i[6])
+            elif i[2]:
+                tmp += '{}->{}'.format(i[3] + 1, i[4] + 1)
             else:
-                tmp += '--|'
-        if i[2]:
-            tmp += '{}->{}'.format(i[3] + 1, i[4] + 1)
-        else:
-            tmp += '-'
+                tmp += '-'
         tmp1 = ' {:<15}p '.format(tmp)
         s+=tmp1
     print(s)
+
+
+def convert_status_word(word):
+    if word[1]:
+        res = '{:<2}'.format(word[1].no + 1)
+    else:
+        if word[5] > 0:
+            res = '{}<-{}'.format(word[5] + 1, word[6])
+        elif word[2]:
+            res = '{}->{}'.format(word[3] + 1, word[4] + 1)
+        else:
+            res = '-'
+    return res
+
 
 '''matrix = [[0, 2, 0, 0, 0, 0, 0],
           [0, 0, 10, 0, 0, 0, 0],
@@ -830,16 +854,6 @@ marker = Marker()
 
 def perform_simulation(g=None):
     global tick, procEnded, dataOnBus, CPcopy
-    from django.conf import settings
-
-    import os
-    # os.environ["DJANGO_SETTINGS_MODULE"] = "planner.settings.py"
-    # settings.configure()
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "planner.settings")
-    import django
-    django.setup()
-    from graph.models import Graph
-    g = Graph.objects.get(pk=6)
 
     if g is None:
         buildGraf()
@@ -868,7 +882,7 @@ def perform_simulation(g=None):
     ClusterPool.printClusters()
     procEnded = len(procs)
     слово_состояния = [0 for i in procs]
-    result = []
+    table = []
 
     while procEnded:
 
@@ -894,13 +908,23 @@ def perform_simulation(g=None):
             слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending,
                                       i.sendingFrom, i.sendingTo, i.waitingFor, i.waitingFrom]
         строка_состояния(слово_состояния)
+        table.append([convert_status_word(w) for w in слово_состояния])
         tick += 1
         if tick == 5:
             pass
         if tick == 59:
             # break
             pass
+
+    # for index, row in enumerate(result):
+    #     print(index, " ".join(row))
+
     print(findCriticalPath())
+
+    return {
+        "table": table,
+        "clusters": ClusterPool.getClusters()
+    }
 
 
 if __name__ == "__main__":

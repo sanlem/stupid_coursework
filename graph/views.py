@@ -1,4 +1,5 @@
 from django.views.generic import ListView, CreateView, DetailView
+from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import RetrieveAPIView
 from .models import Graph, Node, Edge
@@ -54,4 +55,7 @@ class GraphDetailAPIView(RetrieveAPIView):
 
 def simulate(request, pk):
     graph = Graph.objects.get(pk=pk)
-    perform_simulation(graph)
+    result = perform_simulation(graph)
+
+    return render(request, "results.html", {"rows": result["table"],
+                                            "clusters": result["clusters"]})
