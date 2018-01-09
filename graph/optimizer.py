@@ -504,24 +504,11 @@ class ClusterPool():
             if index == 0: continue
             for j in i:
                 j.isClusterized = index
-        '''# сортируем вершины в кластере по убыванию статического уровня
-        for index, k in enumerate(self.clusters[v1.isClusterized]):
-            k.static_level = successorMaxPath(k) - k.wv
-        self.clusters[v1.isClusterized].sort(key=lambda x: -x.static_level)
-
-        # добавляем ребра чтобы была последовательность
-        for index, i in enumerate(self.clusters[v1.isClusterized][:-1]):
-            tmp2 = self.clusters[v1.isClusterized][index + 1]
-            if tmp2.no not in i.u:
-                i.u.append(tmp2.no)
-                i.wu.append(0)
-            if index > 0: tmp2.parent.append(i.no)'''
 
         CPcopy = findCriticalPath()
 
 
-
-class Marker:
+class BusController:
     isOccupied = False
     onProc = 0
     canFree = False
@@ -532,62 +519,7 @@ class Marker:
         cls.queue.append(processor_number)
 
 
-def buildGraf():
-    global matrix
-    # ПРОВЕРКИ НА ПРАВИЛЬНОСТЬ ФОРМАТА МАТРИЦЫ
-    '''if matrix[0].__len__() != len(vertexWeight) or matrix.__len__() != matrix[0].__len__():
-        raise ValueError
-
-    for i in range(N):
-        # Получаем массив связей
-        u = [j for j in range(matrix[i].__len__()) if matrix[i][j] > 0]
-        # Получаем веса дуг
-        wu = list(filter(lambda x: x > 0, matrix[i]))
-        # print(u, wv)
-        graf.append(V(i, vertexWeight[i], u, wu))
-    # устанавливаем родительские связи
-    for i in graf:
-        for j in graf:
-            if i == j: continue
-            if i.no in j.u:
-                i.parent.append(j.no)
-    # добавляем в первую ячейку массива некластеризованные вершины'''
-    # граф 1
-    graf.append(V(0, 2, [8], [50]))
-    graf.append(V(1, 1, [4], [20]))
-    graf.append(V(2, 4, [5, 6], [40, 30]))
-    graf.append(V(3, 2, [7], [10]))
-    graf.append(V(4, 4, [8, 9], [1, 30]))
-    graf.append(V(5, 1, [9, 12], [2, 10]))
-    graf.append(V(6, 2, [10], [10]))
-    graf.append(V(7, 3, [10], [20]))
-    graf.append(V(8, 1, [11], [20]))
-    graf.append(V(9, 2, [11], [1]))
-    graf.append(V(10, 1, [12], [10]))
-    graf.append(V(11, 5, [13], [30]))
-    graf.append(V(12, 2, [14], [10]))
-    graf.append(V(13, 2, [], []))
-    graf.append(V(14, 1, [], []))
-
-    matrix = [[0 for i in range(len(graf))] for j in range(len(graf))]
-    # устанавливаем родителей
-    for i in graf:
-        for j in graf:
-            if i.no in j.u:
-                i.parent.append(j.no)
-
-    for index, i in enumerate(graf):
-        for index1, j in enumerate(i.u):
-            #print('i={0} j={1}'.format(i,j))
-            if i.no == 14:
-                pass
-            matrix[i.no][j] = i.wu[index1]
-    ClusterPool.clusters[0] = []
-    for i in graf:
-        ClusterPool.clusters[0].append(i)
-
-
-def buildConstructedGraph(g):
+def build_constructed_graph(g):
     global graf, matrix
     nodes = g.nodes.all()
     print("{} nodes".format(len(nodes)))
@@ -849,16 +781,13 @@ matrix =    [[0,   1000,  5,   0,   0],
 N = len(matrix)
 vertexWeight = [100, 100, 100, 100, 100]'''
 
-marker = Marker()
+marker = BusController()
 
 
 def perform_simulation(g=None):
     global tick, procEnded, dataOnBus, CPcopy
 
-    if g is None:
-        buildGraf()
-    else:
-        buildConstructedGraph(g)
+    build_constructed_graph(g)
 
     #levelDistribution()
     CPcopy = findCriticalPath()
@@ -881,7 +810,7 @@ def perform_simulation(g=None):
 
     ClusterPool.printClusters()
     procEnded = len(procs)
-    слово_состояния = [0 for i in procs]
+    status_word = [0 for i in procs]
     table = []
 
     while procEnded:
@@ -905,21 +834,12 @@ def perform_simulation(g=None):
             send(dataOnBus)
         for index, i in enumerate(procs):
             i.handle()
-            слово_состояния[index] = [i.no == marker.onProc, i.currentTask, i.isSending,
+            status_word[index] = [i.no == marker.onProc, i.currentTask, i.isSending,
                                       i.sendingFrom, i.sendingTo, i.waitingFor, i.waitingFrom]
-        строка_состояния(слово_состояния)
-        table.append([convert_status_word(w) for w in слово_состояния])
+        table.append([convert_status_word(w) for w in status_word])
         tick += 1
-        if tick == 5:
-            pass
-        if tick == 59:
-            # break
-            pass
 
-    # for index, row in enumerate(result):
-    #     print(index, " ".join(row))
-
-    print(findCriticalPath())
+    # print(findCriticalPath())
 
     return {
         "table": table,
