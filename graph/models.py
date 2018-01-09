@@ -20,6 +20,9 @@ class Node(models.Model):
     left = models.PositiveSmallIntegerField(null=False, blank=False)
     top = models.PositiveSmallIntegerField(null=False, blank=False)
 
+    def __str__(self):
+        return "{} - {}".format(self.graph.name, self.index)
+
 
 class Edge(models.Model):
     from_node = models.ForeignKey(Node, null=False, blank=False, on_delete=models.CASCADE,

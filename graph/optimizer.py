@@ -336,14 +336,14 @@ class ClusterPool():
 
             # добавляем ребра, чтобы ссимулировать последовательность
             # для дальнейшего расчета КП
-            ребромассив=[]
+            edge_array=[]
 
             for index, i in enumerate(cluster1[:-1]):
                 if cluster1[index+1].no not in i.u:
                     i.u.append(cluster1[index+1].no)
                     i.wu.append(0)
                     i.adU += 1
-                    ребромассив.append(index)
+                    edge_array.append(index)
 
             cp1 = findCriticalPath()
 
@@ -358,14 +358,14 @@ class ClusterPool():
                     if i in cluster2: continue
                     self.unzeroing(i, cluster2)
                 # удаляем ребра
-                for j in ребромассив:
+                for j in edge_array:
                     for index, i in enumerate(cluster1):
                         if j == index:
                             i.u.remove(i.u[-1])
                             i.wu.remove(i.wu[-1])
                             i.adU -= 1
                             continue
-                del ребромассив
+                del edge_array
                 for i in cluster2:
                     cluster1.remove(i)
 
@@ -395,14 +395,14 @@ class ClusterPool():
 
             # добавляем ребра, чтобы ссимулировать последовательность
             # для дальнейшего расчета КП
-            ребромассив = []
+            edge_array = []
 
             for index, i in enumerate(cluster1[:-1]):
                 if cluster1[index + 1].no not in i.u:
                     i.u.append(cluster1[index + 1].no)
                     i.wu.append(0)
                     i.adU += 1
-                    ребромассив.append(index)
+                    edge_array.append(index)
 
             newCp = findCriticalPath()
             if newCp <= CPcopy:
@@ -412,14 +412,14 @@ class ClusterPool():
             else:
                 self.unzeroing(v2, cluster1)
                 # удаляем ребра
-                for j in ребромассив:
+                for j in edge_array:
                     for index, i in enumerate(cluster1):
                         if j == index:
                             i.u.remove(i.u[-1])
                             i.wu.remove(i.wu[-1])
                             i.adU -= 1
                             continue
-                del ребромассив
+                del edge_array
 
                 cluster1.remove(v2)
 
@@ -447,14 +447,14 @@ class ClusterPool():
 
             # добавляем ребра, чтобы ссимулировать последовательность
             # для дальнейшего расчета КП
-            ребромассив=[]
+            edge_array=[]
 
             for index, i in enumerate(cluster2[:-1]):
                 if cluster2[index+1].no not in i.u:
                     i.u.append(cluster2[index+1].no)
                     i.wu.append(0)
                     i.adU += 1
-                    ребромассив.append(index)
+                    edge_array.append(index)
             print(v1, v2)
             newCp = findCriticalPath()
             if newCp <= CPcopy:
@@ -472,14 +472,14 @@ class ClusterPool():
             else:
                 self.unzeroing(v1, cluster2)
                 # удаляем ребра
-                for j in ребромассив:
+                for j in edge_array:
                     for index, i in enumerate(cluster2):
                         if j == index:
                             i.u.remove(i.u[-1])
                             i.wu.remove(i.wu[-1])
                             i.adU -= 1
                             continue
-                del ребромассив
+                del edge_array
 
                 cluster2.remove(v1)
 
